@@ -1,1 +1,7 @@
+html,body{
+    background-color: #f3f3f3 !important;
+}
 .required{color: red;}
+.ng-hide{display: none;}
+
+select.domain{color: white!important;}
