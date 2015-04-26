@@ -65,6 +65,11 @@ window.app
                 _domains.push(domain);
                 chrome.runtime.sendMessage({"domains": _domains});
             },
+            update: function (domain) {
+                _domains=  _.reject(_domains,{label: domain.label});
+                _domains.push(domain);
+                chrome.runtime.sendMessage({"domains": _domains});
+            },
             remove: function (domain) {
                 _domains = _.reject(_domains, domain);
 
@@ -101,7 +106,8 @@ window.app
             return self.newUrl;
         }, function () {
             if (self.newUrl) {
-                self.Error = domainSvc.validateUrl(self.newUrl);
+                var startsWithHttp = _.startsWith(self.newUrl, 'http://') || _.startsWith(self.newUrl, 'https://');
+                self.Error = domainSvc.validateUrl((startsWithHttp ? '' : 'http://') + self.newUrl);
             }
         });
 
@@ -113,9 +119,22 @@ window.app
                 $scope.$digest();
             });
         };
+
+        self.update= function(domain){
+
+        };
+
         self.addDomain = function () {
             if (!domainSvc.exists({url: self.newUrl}) && self.newUrl && self.newLabel) {
-                domainSvc.add({url: new URL(self.newUrl), label: self.newLabel, style: self.newLabelStyle});
+                var startsWithHttp = _.startsWith(self.newUrl, 'http://') || _.startsWith(self.newUrl, 'https://');
+
+                domainSvc.add({
+                    url: new URL((startsWithHttp ? '' : 'http://') + self.newUrl),
+                    label: self.newLabel,
+                    style: self.newLabelStyle,
+                    matchByHostOnly: self.matchByHostOnly,
+                    edit: false
+                });
                 self.newUrl = '';
                 self.newLabel = '';
                 self.newLabelStyle = 'default';
