@@ -55,6 +55,7 @@ window.app
                     } else {
                         console.log('saved:', data.savedDomains);
                         _domains = data.savedDomains || [];
+                        chrome.runtime.sendMessage({"domains": _domains});
                         resolve(_domains);
                     }
                 });
@@ -73,7 +74,7 @@ window.app
                 var error = '';
                 try {
                     new URL(url);
-                    error = _.some(_domains, {url: url}) ? 'This url already exists!' : '';
+                    error = _.some(_domains, {url: {origin: url}}) ? 'This url already exists!' : '';
                 } catch (e) {
                     error = e.message;
                 }
@@ -112,8 +113,8 @@ window.app
         self.labels = ['default', 'primary', 'success', 'info', 'warning', 'danger'];
         self.newLabelStyle = 'default';
         self.domainMatrix = [];
-        self.newUrl = 'http://example.com';
-        domainSvc.loadDomainsFromStorage().then(function(domains){
+        self.newUrl = '';
+        domainSvc.loadDomainsFromStorage().then(function (domains) {
             self.domains = domains || [];
         });
         $scope.$watch(function () {
@@ -133,9 +134,9 @@ window.app
                 $scope.$digest();
             });
         };
-
         self.update = function (domain) {
-
+            domain.edit = false;
+            domainSvc.update(domain);
         };
 
         self.addDomain = function () {
@@ -146,20 +147,23 @@ window.app
                     url: _.assign({}, new URL((startsWithHttp ? '' : 'http://') + self.newUrl)),
                     label: self.newLabel,
                     style: self.newLabelStyle,
-                    matchByHostOnly: self.matchByHostOnly,
+                    "matchByHostOnly": self.matchByHostOnly,
                     edit: false
                 });
                 self.newUrl = '';
                 self.newLabel = '';
                 self.newLabelStyle = 'default';
                 self.domains = domainSvc.getDomains();
-
-                domainSvc.saveDomains();
             }
         };
-
+        self.attemptAdd = function (e) {
+            if (e.which === 13) {
+                self.addDomain();
+            }
+        };
         self.clear = function () {
             domainSvc.empty();
+            self.domains = [];
         };
         self.remove = function (domain) {
             domainSvc.remove(domain);

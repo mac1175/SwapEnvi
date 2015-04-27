@@ -21,70 +21,85 @@ function changeTabUrlByDomain(tab, domain) {
     //    url.port = domain2.url.port;
     chrome.tabs.update(tab.id, {url: url.href});
 };
-chrome.runtime.onMessage.addListener(
-    function (request, sender, sendResponse) {
-        console.log(request);
-        chrome.contextMenus.removeAll(function () {
-            var domains = _.sortBy(request.domains, "label");
-            /*var root = chrome.contextMenus.create({
-             title: 'Envi Options', "contexts": ['page']
-             });*/
+chrome.tabs.onActivated.addListener(function () {
+    chrome.storage.sync.get('savedDomains', function (data) {
+        var error = chrome.runtime.lastError;
+        if (error) {
+            console.log(error.message);
 
-            _.forEach(domains, function (domain) {
-                var targetUrl = domain.matchByHostOnly ? '*' + domain.url.host + '*' : domain.url.origin + '/*';
-                var parent = chrome.contextMenus.create({
-                    title: domain.label + '[' + domain.url.origin + ']',
-                    documentUrlPatterns: [targetUrl],
-                    "contexts": ['page']//,
-                    //parentId: root
-                });
-                var otherDomains = _.reject(domains, {label: domain.label}),
-                    otherUrls = _.map(_.pluck(otherDomains, 'url.origin'), function (u) {
-                        return u + '/*';
-                    });
-                _.forEach(otherDomains, function (domain2) {
-                    chrome.contextMenus.create({
-                        title: 'Change to ' + domain2.label + '[' + domain2.url.origin + ']',
-                        "contexts": ['page'],
-                        "parentId": parent,
-                        onclick: function () {
-                            chrome.tabs.query({url: targetUrl}, function (tabs) {
-                                _.forEach(tabs, function (tab) {
-                                    changeTabUrlByDomain(tab, domain2);
-                                });
-                            });
-                        }
-                    });
+        } else {
+            var domains = data.savedDomains;
+            console.log('saved:', domains);
+            loadDomains(domains);
+        }
+    });
+});
+function loadDomains(d) {
+    var domains = _.sortBy(d, "label");
+    chrome.contextMenus.removeAll(function () {
+        /*var root = chrome.contextMenus.create({
+         title: 'Envi Options', "contexts": ['page']
+         });*/
 
+        _.forEach(domains, function (domain) {
+            var targetUrl = domain.url.origin + '/*';
+
+            var otherDomains = _.reject(domains, {label: domain.label}),
+                otherUrls = _.map(_.pluck(otherDomains, 'url.origin'), function (u) {
+                    return u + '/*';
                 });
-                console.log('otherUrls',otherUrls)
+
+            _.forEach(otherDomains, function (domain2) {
+                console.log("domain2", domain2);
+                console.log("targetUrl", targetUrl);
                 chrome.contextMenus.create({
-                    title: 'Change ALL other environments to this one. ',
-                    "contexts": ['page'],
-                    "parentId": parent,
+                    title: 'Change to ' + domain2.label + ' [' + domain2.url.origin + ']',
+                    documentUrlPatterns:[targetUrl],
+                    "contexts": ['all'],
                     onclick: function () {
-                        chrome.tabs.query({url: otherUrls}, function (tabs) {
+                        chrome.tabs.query({url: targetUrl}, function (tabs) {
                             _.forEach(tabs, function (tab) {
-                                changeTabUrlByDomain(tab, domain);
-                            });
-                        });
-
-                    }
-                });
-                chrome.contextMenus.create({
-                    title: 'Open ALL other environments using their host. ',
-                    "contexts": ['page'],
-                    "parentId": parent,
-                    onclick: function () {
-                        chrome.tabs.getCurrent(function (tab) {
-                            chrome.tabs.duplicate(tab.id, function (dupeTab) {
-                                _.forEach(otherDomains, function (dd) {
-                                    changeTabUrlByDomain(dupeTab, dd);
-                                });
+                                changeTabUrlByDomain(tab, domain2);
                             });
                         });
                     }
                 });
             });
+            chrome.contextMenus.create({
+                title: 'Change ALL other environments to this one. ' + targetUrl,
+                documentUrlPatterns: [targetUrl],
+                "contexts": ['all'],
+                onclick: function () {
+                    chrome.tabs.query({url: otherUrls}, function (tabs) {
+                        _.forEach(tabs, function (tab) {
+                            changeTabUrlByDomain(tab, domain);
+                        });
+                    });
+                }
+            });
+            chrome.contextMenus.create({
+                title: 'Open ALL other environments using their host. ' + targetUrl,
+                documentUrlPatterns: [targetUrl],
+                "contexts": ['all'],
+                onclick: function () {
+                    chrome.tabs.query({currentWindow: true, active: true}, function (tabs) {
+                        var tab = tabs[0];
+                        if (tab) {
+                            chrome.tabs.duplicate(tab.id, function (dupeTab) {
+                                _.forEach(otherDomains, function (dd) {
+                                    changeTabUrlByDomain(dupeTab, dd);
+                                });
+                            });
+                        }
+                    });
+                }
+            });
+
         });
+    });
+}
+chrome.runtime.onMessage.addListener(
+    function (request, sender, sendResponse) {
+        console.log(request);
+
     });

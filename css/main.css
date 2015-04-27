@@ -5,3 +5,5 @@ html,body{
 .ng-hide{display: none;}
 .btn .glyphicon{margin-right: 5px;}
 select.domain{color: white!important;}
+h3{padding: 17px;
+background:url('../icon16.png') no-repeat transparent;}

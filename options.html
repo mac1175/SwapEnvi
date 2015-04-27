@@ -14,7 +14,7 @@
 </head>
 <body id="options" ng-controller="domainManagerCtrl as ctrl">
 <div class="container">
-    <h3>Envi Options</h3>
+    <h3>Swap Envi - Options</h3>
     <hr>
     <ul id="menu" class="list-unstyled">
 
@@ -24,8 +24,8 @@
                     <label class="col-sm-2 control-label">Url<span class="required">*</span></label>
 
                     <div class="col-sm-10">
-                        <input ng-model="ctrl.newUrl" class="form-control input-md" required
-                               placeholder="http:// or https://">
+                        <input ng-model="ctrl.newUrl" class="form-control input-md" ng-keypress="ctrl.attemptAdd($event)" required
+                               placeholder="http[s]://">
                     </div>
                 </div>
                 <div class="col-sm-2"></div>
@@ -34,10 +34,16 @@
                 </div>
 
                 <div class="form-group">
+                    <div class="col-sm-2"></div>
+                    <div class="col-sm-10">
+                        <small>Omitting the protocol defaults the Url to http://</small>
+                    </div>
+                </div>
+                <div class="form-group">
                     <label class="col-sm-2 control-label">Label<span class="required">*</span></label>
 
                     <div class="col-sm-5">
-                        <input class="form-control input-md" ng-model="ctrl.newLabel" required
+                        <input class="form-control input-md" ng-model="ctrl.newLabel" ng-keypress="ctrl.attemptAdd($event)" required
                                placeholder="e.g., Production">
                     </div>
                     <div class="col-sm-5">
@@ -55,8 +61,8 @@
                                 type="checkbox" id="matchByHostOnly" ng-model="ctrl.matchByHostOnly"></label>
                     </div>
                     <div class="col-sm-2">
-                        <div class="btn btn-primary" ng-click="ctrl.addDomain()" id="add-url"><i
-                                class="glyphicon glyphicon-plus-sign"></i>ADD HOST
+                        <div class="btn btn-primary" ng-click="ctrl.addDomain()" id="add-url">
+                            <i class="glyphicon glyphicon-plus-sign"></i>ADD HOST
                         </div>
                     </div>
                 </div>
@@ -64,34 +70,42 @@
 
         </li>
     </ul>
-    <h4>Environment Hosts <span class="btn"><i class="glyphicon glyphicon-trash" ng-click="ctrl.clear()"></i></span></h4>
+    <h4>Environment Hosts
+    </h4>
     <hr>
     <div ng-hide="ctrl.domains.length">
         <i>No domains have been added.</i>
     </div>
+    <div ng-show="ctrl.domains.length">
 
-    <table id="domains" class="table" ng-show="ctrl.domains.length">
-        <tr>
-            <th>Label</th>
-            <th>Host</th>
-            <th class="text-center">Match By Host Only</th>
-            <th class="text-center">Action</th>
-        </tr>
-        <tr ng-repeat="domain in ctrl.domains track by $index">
-            <td><span class="label label-{{domain.style}}">{{domain.label}}</span></td>
-            <td><a href='{{domain.url.origin}}'>{{domain.url.origin}}</a></td>
-            <td class="text-center"><span ng-hide="domain.edit" class="glyphicon"
-                                          ng-class='{"glyphicon-check": domain.matchByHostOnly,"glyphicon-ban-circle": !domain.matchByHostOnly}'></span>
-                <input type="checkbox" ng-model="domain.matchByHostOnly" ng-show="domain.edit">
-            </td>
-            <td class="text-center"><span class="glyphicon glyphicon-remove-circle"
-                                          ng-click="ctrl.remove(domain)"></span><span
-                    class="glyphicon glyphicon-edit" ng-hide="domain.edit" ng-click="domain.edit=true"></span>
-                <span class="glyphicon glyphicon-save" ng-show="domain.edit" ng-click="ctrl.update(domain)"></span>
-            </td>
-        </tr>
+        <table id="domains" class="table">
+            <tr>
+                <th>Label</th>
+                <th>Host</th>
+                <th class="text-center">Match By Host Only</th>
+                <th class="text-center">Action</th>
+                <th></th>
+            </tr>
+            <tr ng-repeat="domain in ctrl.domains track by $index">
+                <td><span class="label label-{{domain.style}}">{{domain.label}}</span></td>
+                <td><a href='{{domain.url.origin}}' target="_blank">{{domain.url.origin}}</a></td>
+                <td class="text-center"><span ng-hide="domain.edit" class="glyphicon"
+                                              ng-class='{"glyphicon-check": domain.matchByHostOnly,"glyphicon-ban-circle": !domain.matchByHostOnly}'></span>
+                    <input type="checkbox" ng-model="domain.matchByHostOnly" ng-show="domain.edit">
+                </td>
+                <td class="text-center">
 
-    </table>
+                    <span ng-hide="domain.edit" ng-click="domain.edit=true">edit</span>
+                    <span ng-show="domain.edit" ng-click="ctrl.update(domain)">save</span>
+                </td>
+                <td>
+                    <span class="glyphicon glyphicon-remove-circle" ng-click="ctrl.remove(domain)"></span>
+                </td>
+            </tr>
+
+        </table>
+        <span class="btn btn-danger" ng-click="ctrl.clear()"><i class="glyphicon glyphicon-trash"></i> Clear Everything</span>
+    </div>
 </div>
 </body>
 </html>
