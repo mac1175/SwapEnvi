@@ -1,6 +1,6 @@
 {
   "manifest_version": 2,
-  "name": "Swap Envi - the environment switching tool for testing websites. ",
+  "name": "Swap Envi (Beta)- the environment switching tool for testing websites. ",
   "description": "This extension allows you to switch between your Development, Test, QA, Production, or any other environments.",
   "version": "1.0",
   "author": "Mitch Cohen",
