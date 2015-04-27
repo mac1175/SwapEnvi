@@ -64,11 +64,12 @@
 
         </li>
     </ul>
-    <h4>Environment Hosts</h4>
+    <h4>Environment Hosts <span class="btn"><i class="glyphicon glyphicon-trash" ng-click="ctrl.clear()"></i></span></h4>
     <hr>
     <div ng-hide="ctrl.domains.length">
         <i>No domains have been added.</i>
     </div>
+
     <table id="domains" class="table" ng-show="ctrl.domains.length">
         <tr>
             <th>Label</th>

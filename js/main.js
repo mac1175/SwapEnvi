@@ -38,8 +38,29 @@ window.app
             }
         };
     })
-    .service('domainSvc', [function () {
+    .service('domainSvc', ['$q', function ($q) {
         var _domains = [];
+        var saveDomains = function () {
+            chrome.storage.sync.set({savedDomains: _domains || []}, function () {
+                console.log('saved:', arguments);
+            });
+        };
+        var loadDomains = function () {
+            return $q(function (resolve, reject) {
+                chrome.storage.sync.get('savedDomains', function (data) {
+                    var error = chrome.runtime.lastError;
+                    if (error) {
+                        console.log(error.message);
+                        reject(error.message);
+                    } else {
+                        console.log('saved:', data.savedDomains);
+                        _domains = data.savedDomains || [];
+                        resolve(_domains);
+                    }
+                });
+            });
+        };
+
         return {
 
             getDomains: function () {
@@ -60,48 +81,41 @@ window.app
             },
             empty: function () {
                 _domains = [];
+                saveDomains();
             },
             add: function (domain) {
                 _domains.push(domain);
+                saveDomains();
                 chrome.runtime.sendMessage({"domains": _domains});
             },
             update: function (domain) {
-                _domains=  _.reject(_domains,{label: domain.label});
+                _domains = _.reject(_domains, {label: domain.label});
                 _domains.push(domain);
+                saveDomains();
                 chrome.runtime.sendMessage({"domains": _domains});
             },
             remove: function (domain) {
                 _domains = _.reject(_domains, domain);
-
+                saveDomains();
                 chrome.runtime.sendMessage({"domains": _domains});
             },
             loadDomainsFromStorage: function () {
-                chrome.storage.sync.get('savedDomains', function (data) {
-                    console.log(arguments);
-                    if (data.savedDomains && data.savedDomains.domains) {
-                        _domains = data.savedDomains.domains || [];
-                    }
-                });
-
-            },
-            saveDomains: function () {
-                /*
-                 chrome.storage.sync.set({'savedDomains': {domains: self.domains || []}}, function () {
-                 console.log('saved:', arguments);
-                 });
-                 */
-
+                return loadDomains();
             }
+
         };
     }
     ])
     .controller('domainManagerCtrl', ['$scope', 'domainSvc', function ($scope, domainSvc) {
         var self = this;
-        self.domains = domainSvc.domains || [];
+        self.domains = [];
         self.labels = ['default', 'primary', 'success', 'info', 'warning', 'danger'];
         self.newLabelStyle = 'default';
         self.domainMatrix = [];
         self.newUrl = 'http://example.com';
+        domainSvc.loadDomainsFromStorage().then(function(domains){
+            self.domains = domains || [];
+        });
         $scope.$watch(function () {
             return self.newUrl;
         }, function () {
@@ -120,7 +134,7 @@ window.app
             });
         };
 
-        self.update= function(domain){
+        self.update = function (domain) {
 
         };
 
@@ -129,7 +143,7 @@ window.app
                 var startsWithHttp = _.startsWith(self.newUrl, 'http://') || _.startsWith(self.newUrl, 'https://');
 
                 domainSvc.add({
-                    url: new URL((startsWithHttp ? '' : 'http://') + self.newUrl),
+                    url: _.assign({}, new URL((startsWithHttp ? '' : 'http://') + self.newUrl)),
                     label: self.newLabel,
                     style: self.newLabelStyle,
                     matchByHostOnly: self.matchByHostOnly,
@@ -144,7 +158,9 @@ window.app
             }
         };
 
-
+        self.clear = function () {
+            domainSvc.empty();
+        };
         self.remove = function (domain) {
             domainSvc.remove(domain);
             self.domains = domainSvc.getDomains();

@@ -57,6 +57,7 @@ chrome.runtime.onMessage.addListener(
                     });
 
                 });
+                console.log('otherUrls',otherUrls)
                 chrome.contextMenus.create({
                     title: 'Change ALL other environments to this one. ',
                     "contexts": ['page'],
