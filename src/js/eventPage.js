@@ -65,7 +65,7 @@ function loadDomains(d) {
                         //asume documentUrlPatterns worked, we don't need targetUrl
                         chrome.tabs.query({currentWindow: true, active: true}, function (tabs) {
                             _.forEach(tabs, function (tab) {
-                                changeTabUrlByDomain(tab, domain2);
+                                changeTabUrlByDomain(tab, domain2,true);
                             });
                         });
                     }
@@ -92,7 +92,7 @@ function loadDomains(d) {
                 onclick: function () {
                     chrome.tabs.query({url: otherUrls}, function (tabs) {
                         _.forEach(tabs, function (tab) {
-                            changeTabUrlByDomain(tab, domain);
+                            changeTabUrlByDomain(tab, domain,true);
                         });
                     });
                 }
@@ -107,7 +107,7 @@ function loadDomains(d) {
                         if (tab) {
                             _.forEach(otherDomains, function (domain2) {
                                 chrome.tabs.duplicate(tab.id, function (dupeTab) {
-                                    changeTabUrlByDomain(dupeTab, domain2);
+                                    changeTabUrlByDomain(dupeTab, domain2,true);
                                 });
                             });
                         }
